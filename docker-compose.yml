@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  laravel_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    ports:
+      - "8000:80"
+      - "6001:6001"  # WebSocket port
+    volumes:
+      - .:/var/www
+    environment:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/database/database.sqlite
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    command: ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
